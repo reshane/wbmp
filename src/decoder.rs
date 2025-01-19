@@ -20,6 +20,21 @@ pub struct Decoder<R> {
 impl<R: BufRead + Seek> Decoder<R> {
 
     /// Create a new decoder that decodes from the stream ```reader```.
+    ///
+    /// # Errors
+    ///  - `WbmpError::UnsupportedType` occurs if the TypeField in the image
+    ///  headers is not set to 0.
+    ///  - `WbmpError::UnsupportedHeaders` occurs if extension headers are
+    ///  specified in the image. Extension headers are not required for type
+    ///  0 WBMP images.
+    ///  - `WbmpError::IoError` occurs if the image headers are malformed or
+    ///  if another IoError occurs while reading from the provided `reader`
+    ///
+    /// # Examples
+    /// ```
+    /// let f = BufReader::new(File::open("path/to/file.wbmp").unwrap());
+    /// let mut decoder = Decoder::new(f)?;
+    /// ```
     pub fn new(reader: R) -> WbmpResult<Decoder<R>> {
         let mut decoder = Self::new_decoder(reader);
         decoder.read_metadata()?;
@@ -64,7 +79,7 @@ impl<R: BufRead + Seek> Decoder<R> {
         let _ext_headers_type = (fix_header & EXT_HEADER_TYPE_MASK) >> 5;
 
         if ext_headers_flag != 0 {
-            todo!("Need to implement extension headers parsing");
+            return Err(WbmpError::UnsupportedHeaders);
         }
 
         // Width
