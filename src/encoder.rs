@@ -6,26 +6,29 @@ use crate::error::{
     WbmpResult, WbmpError,
 };
 
-/// A Wbmp encoder
-pub struct WbmpEncoder<'a, W: 'a> {
+/// Default threshold value for `Encoder`
+const DEFAULT_THRESHOLD: u8 = 0x7F;
+
+/// A WBMP encoder
+pub struct Encoder<'a, W: 'a> {
     writer: &'a mut W,
     threshold: u8,
 }
 
-impl<'a, W: Write> WbmpEncoder<'a, W> {
+impl<'a, W: Write> Encoder<'a, W> {
 
-    /// Creates a new encoder for Wbmp images
+    /// Creates a new encoder for Wbmp images.
     pub fn new(writer: &'a mut W) -> Self {
-        WbmpEncoder {
+        Encoder {
             writer,
-            threshold: 127_u8,
+            threshold: DEFAULT_THRESHOLD,
         }
     }
 
-    /// Set the greyscale threshold to use
+    /// Set the greyscale threshold to use.
     ///
-    /// Greyscale values above this threshold will result in black pixels
-    /// while values below will be white. 0-255, default 127.
+    /// Greyscale values below this threshold (inclusive) will result in 
+    /// black pixels while values above will be white. Default 127.
     pub fn with_threshold(mut self, threshold: u8) -> Self {
         self.threshold = threshold;
 
@@ -44,7 +47,8 @@ impl<'a, W: Write> WbmpEncoder<'a, W> {
         result
     }
 
-    /// Encodes the image `image` with dimensions `width` by `height` and `ColorType` `color_type`
+    /// Encodes the image `image` with dimensions `width` by `height` and 
+    /// `ColorType` `color_type`.
     pub fn encode(
         &mut self, 
         image: &[u8], 
@@ -63,7 +67,7 @@ impl<'a, W: Write> WbmpEncoder<'a, W> {
 
         // map and write image data
         match color_type {
-            ColorType::Rgba8 => unimplemented!(),
+            ColorType::Rgba8 => self.encode_rgba8(image, width, height)?,
             ColorType::Luma8 => self.encode_luma8(image, width, height)?,
         }
         Ok(())
@@ -80,7 +84,6 @@ impl<'a, W: Write> WbmpEncoder<'a, W> {
             return Err(WbmpError::InvalidImageData);
         }
 
-        // average components & map using threshold
         for row in image.chunks(width as usize) {
             let mut byte: u8 = 0;
             let mut bits: u8 = 0;
@@ -94,7 +97,46 @@ impl<'a, W: Write> WbmpEncoder<'a, W> {
 
                 bits += 1;
 
-                if bits == 8 || i == row.len()-1 {
+                if bits == 8 || i == width as usize - 1 {
+                    self.writer.write(&[byte; 1])?;
+                    byte = 0;
+                    bits = 0;
+                }
+            }
+        }
+        self.writer.flush()?;
+
+        Ok(())
+    }
+
+    fn encode_rgba8(
+        &mut self,
+        image: &[u8],
+        width: u32,
+        height: u32,
+    ) -> WbmpResult<()> {
+        let data_len = (width * height * 4) as usize;
+        if data_len != image.len() {
+            return Err(WbmpError::InvalidImageData);
+        }
+
+        // average components & map using threshold
+        for row in image.chunks(width as usize * 4) {
+            let mut byte: u8 = 0;
+            let mut bits: u8 = 0;
+            for (i, pixel) in row.chunks(4).enumerate() {
+
+                let pixel = pixel.iter()
+                    .map(|c| *c as usize)
+                    .sum::<usize>() / 4;
+
+                if pixel >= self.threshold as usize {
+                    byte |= 1<<(7-bits);
+                }
+
+                bits += 1;
+
+                if bits == 8 || i == width as usize - 1 {
                     self.writer.write(&[byte; 1])?;
                     byte = 0;
                     bits = 0;

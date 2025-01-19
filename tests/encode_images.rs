@@ -3,9 +3,9 @@ use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
 
-use wbmp::decoder::WbmpDecoder;
-use wbmp::encoder::WbmpEncoder;
-use wbmp::color::ColorType;
+use wbmp::Decoder;
+use wbmp::Encoder;
+use wbmp::ColorType;
 
 const TEST_IMAGE_PREFIX: &str = "./tests/images/";
 
@@ -14,8 +14,11 @@ fn test_encode_image() {
     // decode from file
     let image_file_name = "sample_640x426.wbmp";
     let path = PathBuf::from(TEST_IMAGE_PREFIX).join(image_file_name);
-    let file = BufReader::new(File::open(path).expect("Where is the test file?"));
-    let mut decoder = WbmpDecoder::new(file).expect("Decoder should be instantiable");
+    let file = BufReader::new(
+        File::open(path).expect("Where is the test file?")
+    );
+    let mut decoder = Decoder::new(file)
+        .expect("Decoder should be instantiable");
     let (width, height) = decoder.dimensions();
     assert!(width == 640, "Decoded image width should be 640");
     assert!(height == 426, "Decoded image height should be 426");
@@ -25,8 +28,10 @@ fn test_encode_image() {
 
     // re-encode
     let mut out_bytes = Vec::new();
-    let mut encoder = WbmpEncoder::new(&mut out_bytes);
-    encoder.encode(image_luma8.as_slice(), width, height, ColorType::Luma8).unwrap();
+    let mut encoder = Encoder::new(&mut out_bytes);
+    encoder.encode(
+        image_luma8.as_slice(), width, height, ColorType::Luma8
+    ).unwrap();
     // length
     assert!(out_bytes.len() == 6 + ((640 * 426) / 8));
     // headers
@@ -41,7 +46,7 @@ fn test_encode_image() {
 }
 
 #[test]
-fn test_encode_4x4() {
+fn test_encode_2x2_luma8() {
     const WIDTH:  u32 = 2;
     const HEIGHT: u32 = 2;
     let img_dat = vec![
@@ -52,8 +57,38 @@ fn test_encode_4x4() {
     // 0b1100_0000
 
     let mut out_bytes = Vec::new();
-    let mut encoder = WbmpEncoder::new(&mut out_bytes);
+    let mut encoder = Encoder::new(&mut out_bytes);
     encoder.encode(img_dat.as_slice(), WIDTH, HEIGHT, ColorType::Luma8)
+        .expect("Data should be encodeable");
+    // headers
+    assert!(out_bytes[0] == 0x00);
+    assert!(out_bytes[1] == 0x00);
+    // width
+    assert!(out_bytes[2] == 0x02);
+    // height
+    assert!(out_bytes[3] == 0x02);
+    // image data
+    assert!(out_bytes[4] == 0xC0);
+    assert!(out_bytes[5] == 0xC0);
+}
+
+#[test]
+fn test_encode_2x2_rgba8() {
+    const WIDTH:  u32 = 2;
+    const HEIGHT: u32 = 2;
+    let img_dat = vec![
+        0xFF_u8, 0xFF_u8, 0xFF_u8, 0xFF_u8,
+        0xFF_u8, 0xFF_u8, 0xFF_u8, 0xFF_u8,
+        0xFF_u8, 0xFF_u8, 0xFF_u8, 0xFF_u8,
+        0xFF_u8, 0xFF_u8, 0xFF_u8, 0xFF_u8,
+    ];
+    // rows are 2 long
+    // we expect 2 octets, one per row
+    // 0b1100_0000
+
+    let mut out_bytes = Vec::new();
+    let mut encoder = Encoder::new(&mut out_bytes);
+    encoder.encode(img_dat.as_slice(), WIDTH, HEIGHT, ColorType::Rgba8)
         .expect("Data should be encodeable");
     // headers
     assert!(out_bytes[0] == 0x00);

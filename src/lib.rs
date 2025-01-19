@@ -10,4 +10,6 @@ pub mod encoder;
 mod error;
 pub mod color;
 
-pub use self::error::WbmpError;
+pub use crate::decoder::Decoder;
+pub use crate::encoder::Encoder;
+pub use crate::color::ColorType;

@@ -3,9 +3,10 @@ name = "wbmp"
 license = "MIT/Apache-2.0"
 version = "0.1.0"
 description = "WBMP encoder and decoder"
-author = "shane kenny"
+authors = ["shane kenny <shanekenny023@gmail.com>"]
 readme = "README.md"
 edition = "2021"
 include = ["src/**", "LICENSE-*", "README.md"]
+keywords = ["image", "wbmp", "wireless bitmap"]
 
 [dependencies]

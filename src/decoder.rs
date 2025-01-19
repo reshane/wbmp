@@ -10,31 +10,31 @@ const CONTINUATION_MASK: u8 = 0b10000000;
 const DATA_MASK: u8 = 0b01111111;
 const EXT_HEADER_TYPE_MASK: u8 = 0b01100000;
 
-/// A wbmp decoder
-pub struct WbmpDecoder<R> {
+/// A WBMP decoder
+pub struct Decoder<R> {
     reader: R,
     width: u32,
     height: u32,
 }
 
-impl<R: BufRead + Seek> WbmpDecoder<R> {
+impl<R: BufRead + Seek> Decoder<R> {
 
-    /// Create a new decoder that decodes from the stream ```reader```
-    pub fn new(reader: R) -> WbmpResult<WbmpDecoder<R>> {
+    /// Create a new decoder that decodes from the stream ```reader```.
+    pub fn new(reader: R) -> WbmpResult<Decoder<R>> {
         let mut decoder = Self::new_decoder(reader);
         decoder.read_metadata()?;
         Ok(decoder)
     }
 
-    fn new_decoder(reader: R) -> WbmpDecoder<R> {
-        WbmpDecoder {
+    fn new_decoder(reader: R) -> Decoder<R> {
+        Decoder {
             reader,
             width: 0,
             height: 0,
         }
     }
     
-    /// Returns the `(width, height)` of the image
+    /// Returns the `(width, height)` of the image.
     pub fn dimensions(&self) -> (u32, u32) {
         (self.width, self.height)
     }
@@ -73,7 +73,7 @@ impl<R: BufRead + Seek> WbmpDecoder<R> {
         loop {
             self.reader.read_exact(width_buf)?;
             println!("{:x}", width_buf[0]);
-            self.width = (self.width << 7) | (width_buf[0] & DATA_MASK) as u32;
+            self.width = (self.width<<7) | (width_buf[0] & DATA_MASK) as u32;
             if width_buf[0] & CONTINUATION_MASK != CONTINUATION_MASK {
                 break;
             }
@@ -84,8 +84,8 @@ impl<R: BufRead + Seek> WbmpDecoder<R> {
         // if the continuation bit is set, shift & read the next byte as well
         loop {
             self.reader.read_exact(height_buf)?;
-            println!("{:x}", height_buf[0]);
-            self.height = (self.height << 7) | (height_buf[0] & DATA_MASK) as u32;
+            self.height = (self.height << 7) | 
+                          (height_buf[0] & DATA_MASK) as u32;
             if height_buf[0] & CONTINUATION_MASK != CONTINUATION_MASK {
                 break;
             }
@@ -94,7 +94,8 @@ impl<R: BufRead + Seek> WbmpDecoder<R> {
         Ok(())
     }
 
-    /// Reads the image data bits into the provided buffer
+    /// Reads the image data bits into the provided buffer.
+    /// Output data will be `width * height` bytes, 8 bits per pixel.
     pub fn read_image_data(&mut self, buf: &mut [u8]) -> WbmpResult<()> {
         // convert each row, ignoring padding past self.width
         let data_len = (self.width * self.height) as usize;
