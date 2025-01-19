@@ -8,5 +8,8 @@ readme = "README.md"
 edition = "2021"
 include = ["src/**", "LICENSE-*", "README.md"]
 keywords = ["image", "wbmp", "wireless bitmap"]
+categories = ["multimedia::images", "multimedia::encoding", "encoding"]
+repository = "https://github.com/reshane/wbmp"
+homepage = "https://github.com/reshane/wbmp"
 
 [dependencies]
