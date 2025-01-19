@@ -30,10 +30,14 @@ impl<R: BufRead + Seek> Decoder<R> {
     ///  - `WbmpError::IoError` occurs if the image headers are malformed or
     ///  if another IoError occurs while reading from the provided `reader`
     ///
-    /// # Examples
+    /// ## Examples
     /// ```
-    /// let f = BufReader::new(File::open("path/to/file.wbmp").unwrap());
-    /// let mut decoder = Decoder::new(f)?;
+    /// use wbmp::Decoder;
+    /// use std::{fs::File, io::BufReader};
+    /// let f = BufReader::new(
+    ///     File::open("./tests/images/sample_640x426.wbmp").unwrap()
+    /// );
+    /// let mut decoder = Decoder::new(f).unwrap();
     /// ```
     pub fn new(reader: R) -> WbmpResult<Decoder<R>> {
         let mut decoder = Self::new_decoder(reader);

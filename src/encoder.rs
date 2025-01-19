@@ -19,18 +19,22 @@ impl<'a, W: Write> Encoder<'a, W> {
 
     /// Create a new decoder that decodes from the stream ```reader```.
     ///
-    /// # Examples
+    /// ## Examples
     /// ```
+    /// use std::fs::File;
+    /// use wbmp::Encoder;
     /// let img_data = vec![
-        /// 0xFF, 0x00, 0xFF, 0x00,
-        /// 0xFF, 0x00, 0xFF, 0x00,
-        /// 0xFF, 0x00, 0xFF, 0x00,
-        /// 0xFF, 0x00, 0xFF, 0x00,
+    ///     0xFF, 0x00, 0xFF, 0x00,
+    ///     0xFF, 0x00, 0xFF, 0x00,
+    ///     0xFF, 0x00, 0xFF, 0x00,
+    ///     0xFF, 0x00, 0xFF, 0x00,
     /// ];
     /// let (width, height) = (4, 4);
-    /// let mut out_file = File::create("checker.wbmp")?;
+    /// let mut out_file = vec![];
     /// let mut encoder = Encoder::new(&mut out_file);
-    /// encoder.encode(&img_data, width, height, wbmp::ColorType::Luma8)?;
+    /// encoder.encode(
+    ///     &img_data, width, height, wbmp::ColorType::Luma8
+    /// ).unwrap()
     /// ```
     pub fn new(writer: &'a mut W) -> Self {
         Encoder {
