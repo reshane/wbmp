@@ -1,15 +1,15 @@
 use std::error::Error;
-use std::{io, fmt};
+use std::{fmt, io};
 
 /// Wbmp error kinds
 #[derive(Debug)]
 pub enum WbmpError {
     /// An I/O Error occurred while decoding the image.
     IoError(io::Error),
-    /// An Unsupported Image Type Identifier was encountered while decoding 
+    /// An Unsupported Image Type Identifier was encountered while decoding
     /// the image.
     UnsupportedType(u8),
-    /// Unsupported Extension headers were encountered while decoding the 
+    /// Unsupported Extension headers were encountered while decoding the
     /// image.
     UnsupportedHeaders,
     /// The image does not support the requested operation
@@ -22,24 +22,18 @@ impl fmt::Display for WbmpError {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         match *self {
             WbmpError::IoError(ref e) => e.fmt(fmt),
-            WbmpError::UsageError(ref f) => write!(
-                fmt,
-                "The requested operation could not be completed {}",
-                f,
-            ),
-            WbmpError::UnsupportedType(ref f) => write!(
-                fmt,
-                "The Decoder does not support the image type `{}`",
-                f
-            ),
-            WbmpError::UnsupportedHeaders => write!(
-                fmt,
-                "The Decoder does not support extension headers",
-            ),
-            WbmpError::InvalidImageData => write!(
-                fmt,
-                "The Image data does not match the ColorType",
-            ),
+            WbmpError::UsageError(ref f) => {
+                write!(fmt, "The requested operation could not be completed {}", f,)
+            }
+            WbmpError::UnsupportedType(ref f) => {
+                write!(fmt, "The Decoder does not support the image type `{}`", f)
+            }
+            WbmpError::UnsupportedHeaders => {
+                write!(fmt, "The Decoder does not support extension headers",)
+            }
+            WbmpError::InvalidImageData => {
+                write!(fmt, "The Image data does not match the ColorType",)
+            }
         }
     }
 }
