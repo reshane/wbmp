@@ -1,10 +1,6 @@
+use std::io::Read;
 
-use std::io::BufRead;
-use std::io::Seek;
-
-use crate::error::{
-    WbmpResult, WbmpError,
-};
+use crate::error::{WbmpError, WbmpResult};
 
 const CONTINUATION_MASK: u8 = 0b10000000;
 const DATA_MASK: u8 = 0b01111111;
@@ -17,18 +13,17 @@ pub struct Decoder<R> {
     height: u32,
 }
 
-impl<R: BufRead + Seek> Decoder<R> {
-
+impl<R: Read> Decoder<R> {
     /// Create a new decoder that decodes from the stream ```reader```.
     ///
     /// # Errors
     ///  - `WbmpError::UnsupportedType` occurs if the TypeField in the image
-    ///  headers is not set to 0.
+    ///    headers is not set to 0.
     ///  - `WbmpError::UnsupportedHeaders` occurs if extension headers are
-    ///  specified in the image. Extension headers are not required for type
-    ///  0 WBMP images.
+    ///    specified in the image. Extension headers are not required for type
+    ///    0 WBMP images.
     ///  - `WbmpError::IoError` occurs if the image headers are malformed or
-    ///  if another IoError occurs while reading from the provided `reader`
+    ///    if another IoError occurs while reading from the provided `reader`
     ///
     /// ## Examples
     /// ```
@@ -52,14 +47,13 @@ impl<R: BufRead + Seek> Decoder<R> {
             height: 0,
         }
     }
-    
+
     /// Returns the `(width, height)` of the image.
     pub fn dimensions(&self) -> (u32, u32) {
         (self.width, self.height)
     }
 
     fn read_metadata(&mut self) -> WbmpResult<()> {
-
         // TypeField
         let image_type_buf: &mut [u8; 1] = &mut [0; 1];
         self.reader.read_exact(image_type_buf)?;
@@ -92,7 +86,7 @@ impl<R: BufRead + Seek> Decoder<R> {
         loop {
             self.reader.read_exact(width_buf)?;
             println!("{:x}", width_buf[0]);
-            self.width = (self.width<<7) | (width_buf[0] & DATA_MASK) as u32;
+            self.width = (self.width << 7) | (width_buf[0] & DATA_MASK) as u32;
             if width_buf[0] & CONTINUATION_MASK != CONTINUATION_MASK {
                 break;
             }
@@ -103,8 +97,7 @@ impl<R: BufRead + Seek> Decoder<R> {
         // if the continuation bit is set, shift & read the next byte as well
         loop {
             self.reader.read_exact(height_buf)?;
-            self.height = (self.height << 7) | 
-                          (height_buf[0] & DATA_MASK) as u32;
+            self.height = (self.height << 7) | (height_buf[0] & DATA_MASK) as u32;
             if height_buf[0] & CONTINUATION_MASK != CONTINUATION_MASK {
                 break;
             }
@@ -119,9 +112,9 @@ impl<R: BufRead + Seek> Decoder<R> {
         // convert each row, ignoring padding past self.width
         let data_len = (self.width * self.height) as usize;
         if buf.len() < data_len {
-            return Err(WbmpError::UsageError(
-                String::from("Provided buffer does not have enough capacity")
-            ));
+            return Err(WbmpError::UsageError(String::from(
+                "Provided buffer does not have enough capacity",
+            )));
         }
 
         let row_bytes = if self.width % 8 == 0 {
@@ -140,7 +133,7 @@ impl<R: BufRead + Seek> Decoder<R> {
             'bytes: for byte in bit_data.iter() {
                 let mut s = 7;
                 'bits: while read_idx < data_len {
-                    if byte & (1<<s) == (1<<s) {
+                    if byte & (1 << s) == (1 << s) {
                         buf[read_idx] = 0xFF;
                     }
 

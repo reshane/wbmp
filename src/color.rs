@@ -1,4 +1,3 @@
-
 /// Color type of the image.
 ///
 /// Wbmp does not support color images. This enum is used to indicate the
