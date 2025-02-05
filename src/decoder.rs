@@ -85,7 +85,6 @@ impl<R: Read> Decoder<R> {
         // if the continuation bit is set, shift & read the next byte as well
         loop {
             self.reader.read_exact(width_buf)?;
-            println!("{:x}", width_buf[0]);
             self.width = (self.width << 7) | (width_buf[0] & DATA_MASK) as u32;
             if width_buf[0] & CONTINUATION_MASK != CONTINUATION_MASK {
                 break;
