@@ -2,6 +2,9 @@
 
 ## Versions
 
+### 0.1.2
+ - Remove `println!`, yanked previous versions which included the `println!`
+
 ### 0.1.1
  - Change traits on Decoder.reader from `BufRead + Seek` to `Read`
 
