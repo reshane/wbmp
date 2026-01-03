@@ -13,7 +13,7 @@ pub struct Encoder<'a, W: 'a> {
 }
 
 impl<'a, W: Write> Encoder<'a, W> {
-    /// Create a new decoder that decodes from the stream ```reader```.
+    /// Create a new encoder with output stream directed to `writer`
     ///
     /// ## Examples
     /// ```

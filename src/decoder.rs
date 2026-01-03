@@ -14,7 +14,7 @@ pub struct Decoder<R> {
 }
 
 impl<R: Read> Decoder<R> {
-    /// Create a new decoder that decodes from the stream ```reader```.
+    /// Create a new decoder that decodes from the stream `reader`.
     ///
     /// # Errors
     ///  - `WbmpError::UnsupportedType` occurs if the TypeField in the image
